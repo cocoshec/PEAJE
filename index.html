@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peaje Shock - Sistema de Peaje Automático</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00E5FF',
+                        accent: '#00FF88',
+                        dark: '#060910',
+                        darker: '#030508',
+                        card: '#0c1220',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+
+        .glitch { position: relative; }
+        .glitch::before, .glitch::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .glitch::before { animation: glitch-1 2s infinite linear alternate-reverse; clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%); color: #00E5FF; }
+        .glitch::after { animation: glitch-2 2s infinite linear alternate-reverse; clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%); color: #00FF88; }
+        @keyframes glitch-1 { 0%{transform:translate(0)} 20%{transform:translate(-3px,3px)} 40%{transform:translate(-3px,-3px)} 60%{transform:translate(3px,3px)} 80%{transform:translate(3px,-3px)} 100%{transform:translate(0)} }
+        @keyframes glitch-2 { 0%{transform:translate(0)} 20%{transform:translate(3px,-3px)} 40%{transform:translate(3px,3px)} 60%{transform:translate(-3px,-3px)} 80%{transform:translate(-3px,3px)} 100%{transform:translate(0)} }
+
+        .glow-cyan { box-shadow: 0 0 30px rgba(0,229,255,0.4), 0 0 60px rgba(0,229,255,0.1); }
+        .glow-green { box-shadow: 0 0 30px rgba(0,255,136,0.4), 0 0 60px rgba(0,255,136,0.1); }
+        .glow-intense { box-shadow: 0 0 40px rgba(0,229,255,0.6), 0 0 80px rgba(0,229,255,0.2), 0 0 120px rgba(0,229,255,0.1); }
+        .text-glow-cyan { text-shadow: 0 0 30px rgba(0,229,255,0.8), 0 0 60px rgba(0,229,255,0.4); }
+        .text-glow-green { text-shadow: 0 0 30px rgba(0,255,136,0.8), 0 0 60px rgba(0,255,136,0.4); }
+
+        .circuit-bg { background-image: linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px); background-size: 60px 60px; }
+
+        .scan-line::after { content:''; position:absolute; top:0; left:0; width:100%; height:2px; background:linear-gradient(90deg,transparent,#00E5FF,transparent); animation:scan 3s linear infinite; }
+        @keyframes scan { 0%{top:0;opacity:0} 50%{opacity:1} 100%{top:100%;opacity:0} }
+
+        @keyframes float { 0%,100%{transform:translateY(0) rotate(0deg)} 25%{transform:translateY(-10px) rotate(1deg)} 50%{transform:translateY(-20px) rotate(0deg)} 75%{transform:translateY(-10px) rotate(-1deg)} }
+        .float { animation: float 6s ease-in-out infinite; }
+
+        .pulse-ring { position: relative; }
+        .pulse-ring::before { content:''; position:absolute; inset:-4px; border:2px solid #00E5FF; border-radius:50%; animation:pulse-ring 2s ease-out infinite; }
+        @keyframes pulse-ring { 0%{transform:scale(1);opacity:1} 100%{transform:scale(1.3);opacity:0} }
+
+        @keyframes gradient-shift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .animate-gradient { background-size: 200% 200%; animation: gradient-shift 3s ease infinite; }
+
+        .reveal { opacity:0; transform:translateY(60px); transition: all 0.8s cubic-bezier(0.16,1,0.3,1); }
+        .reveal.active { opacity:1; transform:translateY(0); }
+        .reveal-left { opacity:0; transform:translateX(-80px); transition: all 0.8s cubic-bezier(0.16,1,0.3,1); }
+        .reveal-left.active { opacity:1; transform:translateX(0); }
+        .reveal-right { opacity:0; transform:translateX(80px); transition: all 0.8s cubic-bezier(0.16,1,0.3,1); }
+        .reveal-right.active { opacity:1; transform:translateX(0); }
+
+        .card-cinematic { position: relative; overflow: hidden; }
+        .card-cinematic::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(0,229,255,0.1),transparent,rgba(0,255,136,0.1)); opacity:0; transition:opacity 0.5s; }
+        .card-cinematic:hover::before { opacity:1; }
+
+        .hero-bg { background: radial-gradient(ellipse at 20% 50%,rgba(0,229,255,0.08) 0%,transparent 50%), radial-gradient(ellipse at 80% 50%,rgba(0,255,136,0.05) 0%,transparent 50%), radial-gradient(ellipse at 50% 0%,rgba(0,229,255,0.05) 0%,transparent 60%); }
+
+        .stagger-children > * { opacity:0; transform:translateY(30px); transition: all 0.6s cubic-bezier(0.16,1,0.3,1); }
+        .stagger-children.active > *:nth-child(1) { transition-delay:0.1s; opacity:1; transform:translateY(0); }
+        .stagger-children.active > *:nth-child(2) { transition-delay:0.2s; opacity:1; transform:translateY(0); }
+        .stagger-children.active > *:nth-child(3) { transition-delay:0.3s; opacity:1; transform:translateY(0); }
+        .stagger-children.active > *:nth-child(4) { transition-delay:0.4s; opacity:1; transform:translateY(0); }
+        .stagger-children.active > *:nth-child(5) { transition-delay:0.5s; opacity:1; transform:translateY(0); }
+        .stagger-children.active > *:nth-child(6) { transition-delay:0.6s; opacity:1; transform:translateY(0); }
+
+        html { scroll-behavior: smooth; }
+        body { background: #060910; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #060910; }
+        ::-webkit-scrollbar-thumb { background: #00E5FF; border-radius: 3px; }
+
+        .noise::before { content:''; position:fixed; inset:0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events:none; z-index:9999; opacity:0.4; }
+
+        .logo-contain { object-fit: contain !important; width: 100%; height: 100%; }
+        .logo-cover { object-fit: cover !important; width: 100%; height: 100%; }
+    </style>
+</head>
+<body class="text-white noise">
+
+    <!-- PRELOADER -->
+    <div id="preloader" class="fixed inset-0 bg-darker z-[100] flex items-center justify-center transition-opacity duration-700">
+        <div class="text-center">
+            <img src="assets/logo.png" alt="Logo" class="w-24 h-24 mx-auto mb-6 float logo-contain">
+            <div class="w-48 h-1 bg-white/10 rounded-full overflow-hidden mx-auto">
+                <div id="loader-bar" class="h-full bg-gradient-to-r from-primary to-accent rounded-full" style="width: 0%"></div>
+            </div>
+            <p class="text-gray-500 text-sm mt-4 font-orbitron tracking-widest">INITIALIZING SYSTEM</p>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-500 bg-transparent">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-24">
+                <a href="#" class="flex items-center gap-4 group">
+                    <div class="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 border border-primary/20 group-hover:glow-cyan transition-all duration-500">
+                        <img src="assets/logo.png" alt="Peaje Shock" class="logo-contain">
+                    </div>
+                    <div>
+                        <span class="text-xl font-black tracking-wider font-orbitron">PEAJE<span class="text-primary">SHOCK</span></span>
+                        <p class="text-[10px] text-gray-500 tracking-[0.3em] uppercase">Sistema Automático</p>
+                    </div>
+                </a>
+                <div class="hidden md:flex items-center gap-10">
+                    <a href="#inicio" class="text-gray-400 hover:text-primary transition-all duration-300 text-sm font-medium relative group">Inicio<span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span></a>
+                    <a href="#servicios" class="text-gray-400 hover:text-primary transition-all duration-300 text-sm font-medium relative group">Servicios<span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span></a>
+                    <a href="#proceso" class="text-gray-400 hover:text-primary transition-all duration-300 text-sm font-medium relative group">Proceso<span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span></a>
+                    <a href="#tecnologia" class="text-gray-400 hover:text-primary transition-all duration-300 text-sm font-medium relative group">Tecnología<span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span></a>
+                    <a href="#contacto" class="bg-gradient-to-r from-primary to-accent text-dark font-bold px-8 py-3 rounded-full text-sm hover:shadow-[0_0_40px_rgba(0,229,255,0.4)] transition-all duration-500">Solicitar Info</a>
+                </div>
+                <button id="mobileMenuBtn" class="md:hidden text-white p-2"><i data-lucide="menu" class="w-6 h-6"></i></button>
+            </div>
+        </div>
+        <div id="mobileMenu" class="hidden md:hidden bg-darker/95 backdrop-blur-xl border-t border-white/5">
+            <div class="px-4 py-6 space-y-4">
+                <a href="#inicio" class="block text-gray-400 hover:text-primary transition-colors py-2">Inicio</a>
+                <a href="#servicios" class="block text-gray-400 hover:text-primary transition-colors py-2">Servicios</a>
+                <a href="#proceso" class="block text-gray-400 hover:text-primary transition-colors py-2">Proceso</a>
+                <a href="#tecnologia" class="block text-gray-400 hover:text-primary transition-colors py-2">Tecnología</a>
+                <a href="#contacto" class="block bg-gradient-to-r from-primary to-accent text-dark font-bold px-6 py-3 rounded-full text-center">Solicitar Info</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section id="inicio" class="relative min-h-screen flex items-center hero-bg overflow-hidden">
+        <div id="particles" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+        <div class="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px]"></div>
+        <div class="absolute inset-0 circuit-bg opacity-30"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-20 items-center">
+                <div class="stagger-children" id="heroText">
+                    <div class="inline-flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-full px-5 py-2 mb-8 backdrop-blur-sm">
+                        <span class="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+                        <span class="text-primary text-xs font-semibold tracking-[0.2em] uppercase font-orbitron">Extensión Maracay 2026</span>
+                    </div>
+                    <h1 class="text-6xl sm:text-7xl lg:text-8xl font-black leading-[0.9] mb-8 font-orbitron">
+                        <span class="block text-white">AUTOMATIZA</span>
+                        <span class="block text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent animate-gradient">TU PEAJE</span>
+                        <span class="block text-glow-cyan glitch" data-text="SIN FRENAR">SIN FRENAR</span>
+                    </h1>
+                    <p class="text-gray-400 text-xl mb-10 max-w-lg leading-relaxed">Sistema de peaje automático con tecnología Arduino, sensores ultrasónicos y reconocimiento en tiempo real. <span class="text-primary font-semibold">Velocidad, seguridad y eficiencia</span> en cada paso.</p>
+                    <div class="flex flex-wrap gap-5">
+                        <a href="#contacto" class="bg-gradient-to-r from-primary to-accent text-dark font-bold px-10 py-5 rounded-full text-lg transition-all duration-500 hover:shadow-[0_0_50px_rgba(0,229,255,0.5)] hover:scale-105 flex items-center gap-3"><i data-lucide="zap" class="w-5 h-5"></i>Solicitar Cotización</a>
+                        <a href="#tecnologia" class="border-2 border-white/10 text-white font-semibold px-10 py-5 rounded-full text-lg hover:bg-white/5 transition-all duration-500 hover:border-primary/50 hover:scale-105 flex items-center gap-3"><i data-lucide="info" class="w-5 h-5"></i>Ver Tecnología</a>
+                    </div>
+                </div>
+
+                <!-- Logo Hero -->
+                <div class="flex justify-center lg:justify-end relative" id="heroLogo">
+                    <div class="relative">
+                        <div class="absolute inset-[-10%] border-2 border-dashed border-primary/20 rounded-full animate-[spin_20s_linear_infinite]"></div>
+                        <div class="absolute inset-[-15%] border border-accent/10 rounded-full animate-[spin_30s_linear_infinite_reverse]"></div>
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full blur-[60px] animate-pulse"></div>
+                        <div class="w-[300px] h-[300px] lg:w-[400px] lg:h-[400px] relative float">
+                            <img src="assets/logo.png" alt="Peaje Shock" class="logo-contain drop-shadow-[0_0_60px_rgba(0,229,255,0.3)]">
+                        </div>
+                        <div class="absolute top-0 left-1/2 w-3 h-3 bg-primary rounded-full shadow-[0_0_15px_#00E5FF] animate-[spin_8s_linear_infinite]" style="transform-origin: 0 200px;"></div>
+                        <div class="absolute bottom-0 left-1/2 w-2 h-2 bg-accent rounded-full shadow-[0_0_15px_#00FF88] animate-[spin_6s_linear_infinite_reverse]" style="transform-origin: 0 -200px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trust Bar -->
+            <div class="mt-24 stagger-children" id="trustBar">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+                    <div class="card-cinematic bg-white/[0.02] backdrop-blur-sm rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-500 hover:scale-105">
+                        <div class="h-24 overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=300&h=120&fit=crop" alt="Arduino" class="logo-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-dark/90 to-transparent"></div>
+                        </div>
+                        <div class="px-5 pb-4 -mt-4 relative">
+                            <div class="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center mb-2"><i data-lucide="shield-check" class="w-5 h-5 text-primary"></i></div>
+                            <p class="text-white font-bold text-sm">Tecnología Arduino</p>
+                            <p class="text-gray-500 text-xs mt-1">Certificado</p>
+                        </div>
+                    </div>
+                    <div class="card-cinematic bg-white/[0.02] backdrop-blur-sm rounded-2xl overflow-hidden border border-white/5 hover:border-accent/30 transition-all duration-500 hover:scale-105">
+                        <div class="h-24 overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=300&h=120&fit=crop" alt="IoT" class="logo-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-dark/90 to-transparent"></div>
+                        </div>
+                        <div class="px-5 pb-4 -mt-4 relative">
+                            <div class="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center mb-2"><i data-lucide="wifi" class="w-5 h-5 text-accent"></i></div>
+                            <p class="text-white font-bold text-sm">Sensores IoT</p>
+                            <p class="text-gray-500 text-xs mt-1">En tiempo real</p>
+                        </div>
+                    </div>
+                    <div class="card-cinematic bg-white/[0.02] backdrop-blur-sm rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-500 hover:scale-105">
+                        <div class="h-24 overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=300&h=120&fit=crop" alt="Velocidad" class="logo-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-dark/90 to-transparent"></div>
+                        </div>
+                        <div class="px-5 pb-4 -mt-4 relative">
+                            <div class="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center mb-2"><i data-lucide="gauge" class="w-5 h-5 text-primary"></i></div>
+                            <p class="text-white font-bold text-sm">Alta Velocidad</p>
+                            <p class="text-gray-500 text-xs mt-1">Sin detenciones</p>
+                        </div>
+                    </div>
+                    <div class="card-cinematic bg-white/[0.02] backdrop-blur-sm rounded-2xl overflow-hidden border border-white/5 hover:border-accent/30 transition-all duration-500 hover:scale-105">
+                        <div class="h-24 overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=300&h=120&fit=crop" alt="Soporte" class="logo-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-dark/90 to-transparent"></div>
+                        </div>
+                        <div class="px-5 pb-4 -mt-4 relative">
+                            <div class="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center mb-2"><i data-lucide="headphones" class="w-5 h-5 text-accent"></i></div>
+                            <p class="text-white font-bold text-sm">Soporte 24/7</p>
+                            <p class="text-gray-500 text-xs mt-1">Técnico remoto</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+            <span class="text-gray-500 text-xs tracking-widest font-orbitron">SCROLL</span>
+            <i data-lucide="chevron-down" class="w-5 h-5 text-primary"></i>
+        </div>
+    </section>
+
+    <!-- METRICS SECTION -->
+    <section class="py-24 relative overflow-hidden scan-line">
+        <div class="absolute inset-0 bg-gradient-to-b from-dark via-darker to-dark"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid md:grid-cols-3 gap-6 reveal">
+                <div class="md:col-span-1 bg-gradient-to-br from-primary via-primary/80 to-accent rounded-3xl p-10 text-dark relative overflow-hidden group">
+                    <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
+                        <img src="assets/logo.png" alt="" class="logo-contain w-full h-full p-8">
+                    </div>
+                    <div class="relative">
+                        <p class="text-sm font-bold opacity-80 mb-2 tracking-wider uppercase">Próximamente en</p>
+                        <h3 class="text-6xl font-black font-orbitron mb-1">MARACAY</h3>
+                        <p class="text-xl font-medium opacity-90">Extensión 2026</p>
+                        <div class="mt-8 pt-8 border-t border-dark/20">
+                            <p class="text-sm font-bold opacity-80 tracking-wider">ZONA DE COBERTURA</p>
+                            <p class="text-4xl font-black font-orbitron">50+ KM</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:col-span-2 grid sm:grid-cols-2 gap-6 stagger-children" id="metricsGrid">
+                    <div class="card-cinematic bg-card rounded-3xl p-8 border border-white/5 relative overflow-hidden group hover:border-primary/30 transition-all duration-500">
+                        <div class="absolute inset-0 opacity-10"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=300&h=300&fit=crop" alt="" class="logo-cover"></div>
+                        <div class="relative">
+                            <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-5 group-hover:glow-cyan transition-all duration-500"><i data-lucide="cpu" class="w-7 h-7 text-primary"></i></div>
+                            <p class="text-5xl font-black text-primary font-orbitron">ARDUINO</p>
+                            <p class="text-gray-400 mt-3">Microcontrolador principal del sistema</p>
+                        </div>
+                    </div>
+                    <div class="card-cinematic bg-card rounded-3xl p-8 border border-white/5 relative overflow-hidden group hover:border-accent/30 transition-all duration-500">
+                        <div class="absolute inset-0 opacity-10"><img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=300&h=300&fit=crop" alt="" class="logo-cover"></div>
+                        <div class="relative">
+                            <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-5 group-hover:glow-green transition-all duration-500"><i data-lucide="activity" class="w-7 h-7 text-accent"></i></div>
+                            <p class="text-5xl font-black text-accent font-orbitron">IoT</p>
+                            <p class="text-gray-400 mt-3">Conectividad en tiempo real</p>
+                        </div>
+                    </div>
+                    <div class="card-cinematic bg-card rounded-3xl p-8 border border-white/5 relative overflow-hidden group hover:border-primary/30 transition-all duration-500">
+                        <div class="absolute inset-0 opacity-10"><img src="https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=300&h=300&fit=crop" alt="" class="logo-cover"></div>
+                        <div class="relative">
+                            <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-5 group-hover:glow-cyan transition-all duration-500"><i data-lucide="eye" class="w-7 h-7 text-primary"></i></div>
+                            <p class="text-5xl font-black text-primary font-orbitron">CÁMARA</p>
+                            <p class="text-gray-400 mt-3">Reconocimiento de placas vehiculares</p>
+                        </div>
+                    </div>
+                    <div class="card-cinematic bg-card rounded-3xl p-8 border border-white/5 relative overflow-hidden group hover:border-accent/30 transition-all duration-500">
+                        <div class="absolute inset-0 opacity-10"><img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=300&h=300&fit=crop" alt="" class="logo-cover"></div>
+                        <div class="relative">
+                            <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-5 group-hover:glow-green transition-all duration-500"><i data-lucide="timer" class="w-7 h-7 text-accent"></i></div>
+                            <p class="text-5xl font-black text-accent font-orbitron">0.5s</p>
+                            <p class="text-gray-400 mt-3">Tiempo promedio de procesamiento</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 reveal">
+                <div class="card-cinematic bg-card rounded-3xl p-8 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5"></div>
+                    <div class="flex items-center gap-5 relative">
+                        <div class="pulse-ring">
+                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-intense p-2">
+                                <img src="assets/logo.png" alt="Logo" class="logo-contain">
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">¿Tienes dudas? Llámanos</p>
+                            <p class="text-3xl font-black font-orbitron">+58 412-123-4567</p>
+                        </div>
+                    </div>
+                    <a href="#contacto" class="relative bg-white/5 border border-white/10 text-white font-bold px-10 py-4 rounded-full hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-primary/30 z-10">Enviar Mensaje</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES SECTION -->
+    <section id="servicios" class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 bg-darker"></div>
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px]"></div>
+        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px]"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-20 reveal">
+                <span class="text-primary text-sm font-semibold tracking-[0.3em] uppercase font-orbitron">Tecnología</span>
+                <h2 class="text-6xl lg:text-7xl font-black mt-4 font-orbitron">COMPONENTES</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-primary to-accent mx-auto mt-6 rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children" id="servicesGrid">
+                <div class="card-cinematic group bg-card rounded-3xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-700 hover:-translate-y-4">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=200&fit=crop" alt="Arduino UNO" class="logo-cover group-hover:scale-125 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent"></div>
+                        <div class="absolute top-4 left-4 text-6xl font-black text-white/10 font-orbitron">01</div>
+                    </div>
+                    <div class="p-7">
+                        <h3 class="text-xl font-bold mb-3 font-orbitron">ARDUINO UNO</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Microcontrolador que controla toda la lógica del sistema, desde la detección hasta la activación de la barrera.</p>
+                    </div>
+                </div>
+                <div class="card-cinematic group bg-card rounded-3xl overflow-hidden border border-white/5 hover:border-accent/30 transition-all duration-700 hover:-translate-y-4">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=200&fit=crop" alt="Sensor" class="logo-cover group-hover:scale-125 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent"></div>
+                        <div class="absolute top-4 left-4 text-6xl font-black text-white/10 font-orbitron">02</div>
+                    </div>
+                    <div class="p-7">
+                        <h3 class="text-xl font-bold mb-3 font-orbitron">SENSOR ULTRASÓNICO</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Detecta la presencia y distancia de vehículos en tiempo real para activar el mecanismo de cobro automático.</p>
+                    </div>
+                </div>
+                <div class="card-cinematic group bg-card rounded-3xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-700 hover:-translate-y-4">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=400&h=200&fit=crop" alt="Cámara" class="logo-cover group-hover:scale-125 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent"></div>
+                        <div class="absolute top-4 left-4 text-6xl font-black text-white/10 font-orbitron">03</div>
+                    </div>
+                    <div class="p-7">
+                        <h3 class="text-xl font-bold mb-3 font-orbitron">CÁMARA RGB</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Captura imágenes de las placas vehiculares para registro, identificación y control de tráfico automatizado.</p>
+                    </div>
+                </div>
+                <div class="card-cinematic group bg-card rounded-3xl overflow-hidden border border-white/5 hover:border-accent/30 transition-all duration-700 hover:-translate-y-4">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&h=200&fit=crop" alt="Display" class="logo-cover group-hover:scale-125 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent"></div>
+                        <div class="absolute top-4 left-4 text-6xl font-black text-white/10 font-orbitron">04</div>
+                    </div>
+                    <div class="p-7">
+                        <h3 class="text-xl font-bold mb-3 font-orbitron">DISPLAY LCD</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Pantalla que muestra información al conductor: monto cobrado, saldo restante y estado del peaje.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROCESS SECTION -->
+    <section id="proceso" class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 bg-dark"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-20 reveal">
+                <div class="inline-flex items-center gap-3 bg-accent/5 border border-accent/20 rounded-full px-5 py-2 mb-6">
+                    <i data-lucide="star" class="w-4 h-4 text-accent"></i>
+                    <span class="text-accent text-xs font-semibold tracking-[0.2em] uppercase font-orbitron">Sistema Automatizado</span>
+                </div>
+                <h2 class="text-6xl lg:text-7xl font-black font-orbitron">CÓMO FUNCIONA</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-accent to-primary mx-auto mt-6 rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children" id="processGrid">
+                <div class="relative card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 group hover:border-primary/30 transition-all duration-700">
+                    <div class="h-36 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=140&fit=crop" alt="Detección" class="logo-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent"></div>
+                        <div class="absolute top-3 left-3 w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-dark font-black text-lg font-orbitron">1</div>
+                    </div>
+                    <div class="p-7">
+                        <h3 class="text-lg font-bold mb-2 font-orbitron">DETECCIÓN</h3>
+                        <p class="text-gray-400 text-sm">El sensor ultrasónico detecta la aproximación del vehículo al punto de peaje.</p>
+                    </div>
+                </div>
+                <div class="relative card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 group hover:border-accent/30 transition-all duration-700">
+                    <div class="h-36 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=400&h=140&fit=crop" alt="Identificación" class="logo-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent"></div>
+                        <div class="absolute top-3 left-3 w-12 h-12 rounded-2xl bg-gradient-to-br from-accent to-primary flex items-center justify-center text-dark font-black text-lg font-orbitron">2</div>
+                    </div>
+                    <div class="p-7">
+                        <h3 class="text-lg font-bold mb-2 font-orbitron">IDENTIFICACIÓN</h3>
+                        <p class="text-gray-400 text-sm">La cámara captura la placa vehicular y el Arduino procesa la información en tiempo real.</p>
+                    </div>
+                </div>
+                <div class="relative card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 group hover:border-primary/30 transition-all duration-700">
+                    <div class="h-36 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=140&fit=crop" alt="Cobro" class="logo-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent"></div>
+                        <div class="absolute top-3 left-3 w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-dark font-black text-lg font-orbitron">3</div>
+                    </div>
+                    <div class="p-7">
+                        <h3 class="text-lg font-bold mb-2 font-orbitron">COBRO</h3>
+                        <p class="text-gray-400 text-sm">Se procesa el cobro automático y se actualiza el saldo en el display LCD.</p>
+                    </div>
+                </div>
+                <div class="relative card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 group hover:border-accent/30 transition-all duration-700">
+                    <div class="h-36 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=140&fit=crop" alt="Apertura" class="logo-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent"></div>
+                        <div class="absolute top-3 left-3 w-12 h-12 rounded-2xl bg-gradient-to-br from-accent to-primary flex items-center justify-center text-dark font-black text-lg font-orbitron">4</div>
+                    </div>
+                    <div class="p-7">
+                        <h3 class="text-lg font-bold mb-2 font-orbitron">APERTURA</h3>
+                        <p class="text-gray-400 text-sm">La barrera se levanta automáticamente permitiendo el paso del vehículo sin detención.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TECHNOLOGY SECTION -->
+    <section id="tecnologia" class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 bg-darker"></div>
+        <div class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[150px]"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-20 reveal">
+                <span class="text-accent text-sm font-semibold tracking-[0.3em] uppercase font-orbitron">Componentes</span>
+                <h2 class="text-6xl lg:text-7xl font-black mt-4 font-orbitron">ESPECIFICACIONES</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-primary to-accent mx-auto mt-6 rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 stagger-children" id="techGrid">
+                <div class="card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 group hover:border-primary/30 transition-all duration-700 hover:-translate-y-2">
+                    <div class="h-56 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&h=280&fit=crop" alt="Circuitos" class="logo-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 bg-primary/20 backdrop-blur-sm text-primary text-xs font-bold px-3 py-1 rounded-full font-orbitron">HARDWARE</div>
+                    </div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-bold mb-3 font-orbitron">CIRCUITOS INTEGRADOS</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Diseño de circuitos impresos (PCB) para la integración de todos los componentes del sistema.</p>
+                    </div>
+                </div>
+                <div class="card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 group hover:border-accent/30 transition-all duration-700 hover:-translate-y-2">
+                    <div class="h-56 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&h=280&fit=crop" alt="Peaje" class="logo-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 bg-accent/20 backdrop-blur-sm text-accent text-xs font-bold px-3 py-1 rounded-full font-orbitron">MECÁNICA</div>
+                    </div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-bold mb-3 font-orbitron">SISTEMA DE BARRERA</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Mecanismo motorizado de apertura/cierre controlado por Arduino con sensor de seguridad.</p>
+                    </div>
+                </div>
+                <div class="card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 group hover:border-primary/30 transition-all duration-700 hover:-translate-y-2">
+                    <div class="h-56 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&h=280&fit=crop" alt="Software" class="logo-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent"></div>
+                        <div class="absolute bottom-4 left-4 bg-primary/20 backdrop-blur-sm text-primary text-xs font-bold px-3 py-1 rounded-full font-orbitron">SOFTWARE</div>
+                    </div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-bold mb-3 font-orbitron">PLATAFORMA IoT</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Panel de control remoto para monitoreo en tiempo real, reportes y gestión del sistema.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-5 stagger-children" id="metricsBar">
+                <div class="card-cinematic bg-card rounded-3xl p-7 border border-white/5 text-center relative overflow-hidden group hover:border-primary/30 transition-all duration-500">
+                    <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-700"><img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=200&h=200&fit=crop" alt="" class="logo-cover"></div>
+                    <p class="text-4xl font-black text-primary font-orbitron relative">0.5s</p>
+                    <p class="text-gray-400 text-sm mt-2 relative">Tiempo de respuesta</p>
+                </div>
+                <div class="card-cinematic bg-card rounded-3xl p-7 border border-white/5 text-center relative overflow-hidden group hover:border-accent/30 transition-all duration-500">
+                    <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-700"><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&h=200&fit=crop" alt="" class="logo-cover"></div>
+                    <p class="text-4xl font-black text-accent font-orbitron relative">99.9%</p>
+                    <p class="text-gray-400 text-sm mt-2 relative">Precisión detección</p>
+                </div>
+                <div class="card-cinematic bg-card rounded-3xl p-7 border border-white/5 text-center relative overflow-hidden group hover:border-primary/30 transition-all duration-500">
+                    <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-700"><img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=200&h=200&fit=crop" alt="" class="logo-cover"></div>
+                    <p class="text-4xl font-black text-primary font-orbitron relative">24/7</p>
+                    <p class="text-gray-400 text-sm mt-2 relative">Operación continua</p>
+                </div>
+                <div class="card-cinematic bg-card rounded-3xl p-7 border border-white/5 text-center relative overflow-hidden group hover:border-accent/30 transition-all duration-500">
+                    <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-700"><img src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=200&h=200&fit=crop" alt="" class="logo-cover"></div>
+                    <p class="text-4xl font-black text-accent font-orbitron relative">50+</p>
+                    <p class="text-gray-400 text-sm mt-2 relative">Kilómetros cubiertos</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING SECTION -->
+    <section id="precios" class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 bg-dark"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-20 reveal">
+                <span class="text-primary text-sm font-semibold tracking-[0.3em] uppercase font-orbitron">Planes</span>
+                <h2 class="text-6xl lg:text-7xl font-black mt-4 font-orbitron">IMPLEMENTACIÓN</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-primary to-accent mx-auto mt-6 rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto stagger-children" id="pricingGrid">
+                <div class="card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-700 hover:-translate-y-2">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&h=200&fit=crop" alt="Peaje Básico" class="logo-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent"></div>
+                        <div class="absolute bottom-4 left-6">
+                            <h3 class="text-2xl font-bold font-orbitron">PEAJE BÁSICO</h3>
+                            <p class="text-gray-400 text-sm">Estaciones individuales</p>
+                        </div>
+                    </div>
+                    <div class="p-8">
+                        <div class="mb-8">
+                            <span class="text-5xl font-black font-orbitron">$2,500</span>
+                            <span class="text-gray-400"> / implementación</span>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center gap-3 text-sm"><i data-lucide="check-circle" class="w-5 h-5 text-primary flex-shrink-0"></i><span>1 Arduino UNO + Sensores</span></li>
+                            <li class="flex items-center gap-3 text-sm"><i data-lucide="check-circle" class="w-5 h-5 text-primary flex-shrink-0"></i><span>1 Barrera automática</span></li>
+                            <li class="flex items-center gap-3 text-sm"><i data-lucide="check-circle" class="w-5 h-5 text-primary flex-shrink-0"></i><span>Display LCD integrado</span></li>
+                            <li class="flex items-center gap-3 text-sm"><i data-lucide="check-circle" class="w-5 h-5 text-primary flex-shrink-0"></i><span>Instalación incluida</span></li>
+                            <li class="flex items-center gap-3 text-sm text-gray-500"><i data-lucide="x-circle" class="w-5 h-5 flex-shrink-0"></i><span>Reconocimiento de placas</span></li>
+                            <li class="flex items-center gap-3 text-sm text-gray-500"><i data-lucide="x-circle" class="w-5 h-5 flex-shrink-0"></i><span>Panel de monitoreo remoto</span></li>
+                        </ul>
+                        <button class="w-full border-2 border-white/10 text-white font-bold py-4 rounded-2xl hover:bg-white/5 transition-all duration-500 hover:border-primary/30 font-orbitron">SOLICITAR INFO</button>
+                    </div>
+                </div>
+
+                <div class="relative card-cinematic bg-card rounded-3xl overflow-hidden border-2 border-primary/50 hover:border-primary transition-all duration-700 hover:-translate-y-2 hover:shadow-[0_20px_80px_rgba(0,229,255,0.15)]">
+                    <div class="absolute top-0 right-0 bg-gradient-to-r from-primary to-accent text-dark text-xs font-black px-6 py-2 rounded-bl-2xl font-orbitron z-10">RECOMENDADO</div>
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&h=200&fit=crop" alt="Peaje Completo" class="logo-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent"></div>
+                        <div class="absolute bottom-4 left-6">
+                            <h3 class="text-2xl font-bold font-orbitron">PEAJE COMPLETO</h3>
+                            <p class="text-gray-400 text-sm">Sistema integral automatizado</p>
+                        </div>
+                    </div>
+                    <div class="p-8">
+                        <div class="mb-8">
+                            <span class="text-5xl font-black text-primary font-orbitron">$5,800</span>
+                            <span class="text-gray-400"> / implementación</span>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center gap-3 text-sm"><i data-lucide="check-circle" class="w-5 h-5 text-accent flex-shrink-0"></i><span>Arduino UNO + Todos los sensores</span></li>
+                            <li class="flex items-center gap-3 text-sm"><i data-lucide="check-circle" class="w-5 h-5 text-accent flex-shrink-0"></i><span>Barrera automática de alta velocidad</span></li>
+                            <li class="flex items-center gap-3 text-sm"><i data-lucide="check-circle" class="w-5 h-5 text-accent flex-shrink-0"></i><span>Cámara RGB con OCR de placas</span></li>
+                            <li class="flex items-center gap-3 text-sm"><i data-lucide="check-circle" class="w-5 h-5 text-accent flex-shrink-0"></i><span>Display LCD + Panel LED</span></li>
+                            <li class="flex items-center gap-3 text-sm"><i data-lucide="check-circle" class="w-5 h-5 text-accent flex-shrink-0"></i><span>Conectividad WiFi/GPRS</span></li>
+                            <li class="flex items-center gap-3 text-sm"><i data-lucide="check-circle" class="w-5 h-5 text-accent flex-shrink-0"></i><span>Panel de monitoreo remoto 24/7</span></li>
+                        </ul>
+                        <button class="w-full bg-gradient-to-r from-primary to-accent text-dark font-bold py-4 rounded-2xl hover:opacity-90 transition-all duration-500 hover:shadow-[0_0_40px_rgba(0,229,255,0.4)] font-orbitron">COTIZAR AHORA</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 bg-darker"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/3 rounded-full blur-[200px]"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-20 reveal">
+                <span class="text-accent text-sm font-semibold tracking-[0.3em] uppercase font-orbitron">Beneficios</span>
+                <h2 class="text-6xl lg:text-7xl font-black mt-4 font-orbitron">VENTAJAS</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-accent to-primary mx-auto mt-6 rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 stagger-children" id="benefitsGrid">
+                <div class="card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-700 hover:-translate-y-2">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=200&fit=crop" alt="Velocidad" class="logo-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent"></div>
+                        <div class="absolute top-4 left-4 bg-primary/20 backdrop-blur-sm text-primary text-xs font-bold px-3 py-1 rounded-full font-orbitron">VELOCIDAD</div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex gap-1 mb-4">
+                            <i data-lucide="star" class="w-5 h-5 text-primary fill-primary"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-primary fill-primary"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-primary fill-primary"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-primary fill-primary"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-primary fill-primary"></i>
+                        </div>
+                        <p class="text-gray-300 mb-6 leading-relaxed">"El sistema reduce el tiempo de espera en un 90%. Los conductores pasan sin detenerse, mejorando significativamente la fluidez del tráfico."</p>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full overflow-hidden border border-primary/30 flex-shrink-0"><img src="assets/logo.png" alt="Logo" class="logo-contain"></div>
+                            <div>
+                                <p class="font-bold text-sm font-orbitron">REDUCCIÓN DE TIEMPOS</p>
+                                <p class="text-gray-500 text-xs">Beneficio comprobado</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 hover:border-accent/30 transition-all duration-700 hover:-translate-y-2">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=200&fit=crop" alt="Precisión" class="logo-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent"></div>
+                        <div class="absolute top-4 left-4 bg-accent/20 backdrop-blur-sm text-accent text-xs font-bold px-3 py-1 rounded-full font-orbitron">PRECISIÓN</div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex gap-1 mb-4">
+                            <i data-lucide="star" class="w-5 h-5 text-accent fill-accent"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-accent fill-accent"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-accent fill-accent"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-accent fill-accent"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-accent fill-accent"></i>
+                        </div>
+                        <p class="text-gray-300 mb-6 leading-relaxed">"La precisión del cobro automático es del 99.9%. Elimina errores humanos y garantiza la recaudación eficiente de los peajes."</p>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full overflow-hidden border border-accent/30 flex-shrink-0"><img src="assets/logo.png" alt="Logo" class="logo-contain"></div>
+                            <div>
+                                <p class="font-bold text-sm font-orbitron">ALTA PRECISIÓN</p>
+                                <p class="text-gray-500 text-xs">Sin errores de cobro</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-700 hover:-translate-y-2">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=200&fit=crop" alt="Monitoreo" class="logo-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent"></div>
+                        <div class="absolute top-4 left-4 bg-primary/20 backdrop-blur-sm text-primary text-xs font-bold px-3 py-1 rounded-full font-orbitron">MONITOREO</div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex gap-1 mb-4">
+                            <i data-lucide="star" class="w-5 h-5 text-primary fill-primary"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-primary fill-primary"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-primary fill-primary"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-primary fill-primary"></i>
+                            <i data-lucide="star" class="w-5 h-5 text-primary fill-primary"></i>
+                        </div>
+                        <p class="text-gray-300 mb-6 leading-relaxed">"Monitoreo remoto 24/7 permite supervisar cada estación de peaje desde cualquier lugar, generando reportes automáticos."</p>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full overflow-hidden border border-primary/30 flex-shrink-0"><img src="assets/logo.png" alt="Logo" class="logo-contain"></div>
+                            <div>
+                                <p class="font-bold text-sm font-orbitron">CONTROL REMOTO</p>
+                                <p class="text-gray-500 text-xs">Supervisión en tiempo real</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICE AREA -->
+    <section class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 bg-dark"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-20 items-center">
+                <div class="reveal-left">
+                    <span class="text-primary text-sm font-semibold tracking-[0.3em] uppercase font-orbitron">Zona de Cobertura</span>
+                    <h2 class="text-5xl lg:text-6xl font-black mt-4 mb-8 font-orbitron">ÁREAS DE<br>IMPLEMENTACIÓN</h2>
+                    <p class="text-gray-400 mb-10 leading-relaxed text-lg">El sistema Peaje Shock está diseñado para implementarse estratégicamente en la extensión de Maracay, cubriendo puntos clave de la infraestructura vial.</p>
+                    <div class="space-y-5">
+                        <div class="flex items-center gap-5 bg-card rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-500 group">
+                            <div class="w-20 h-20 flex-shrink-0 overflow-hidden"><img src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=100&h=100&fit=crop" alt="" class="logo-cover group-hover:scale-110 transition-transform duration-500"></div>
+                            <div class="pr-5">
+                                <p class="font-bold text-sm font-orbitron">AUTOPISTA REGIONAL DEL CENTRO</p>
+                                <p class="text-gray-500 text-xs">Tramo principal de conexión</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-5 bg-card rounded-2xl overflow-hidden border border-white/5 hover:border-accent/30 transition-all duration-500 group">
+                            <div class="w-20 h-20 flex-shrink-0 overflow-hidden"><img src="https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=100&h=100&fit=crop" alt="" class="logo-cover group-hover:scale-110 transition-transform duration-500"></div>
+                            <div class="pr-5">
+                                <p class="font-bold text-sm font-orbitron">VÍA MARACAY - LA VICTORIA</p>
+                                <p class="text-gray-500 text-xs">Conexión regional</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-5 bg-card rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-500 group">
+                            <div class="w-20 h-20 flex-shrink-0 overflow-hidden"><img src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=100&h=100&fit=crop" alt="" class="logo-cover group-hover:scale-110 transition-transform duration-500"></div>
+                            <div class="pr-5">
+                                <p class="font-bold text-sm font-orbitron">EXTENSIÓN MARACAY 2026</p>
+                                <p class="text-gray-500 text-xs">Zona en desarrollo urbano</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal-right">
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 rounded-3xl blur-2xl"></div>
+                        <div class="relative bg-card rounded-3xl border border-white/5 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&h=350&fit=crop" alt="Mapa" class="w-full h-72 object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent"></div>
+                            <div class="absolute bottom-0 left-0 right-0 p-8 flex items-center gap-5">
+                                <div class="pulse-ring">
+                                    <div class="w-20 h-20 rounded-2xl overflow-hidden border border-primary/30">
+                                        <img src="assets/logo.png" alt="Logo" class="logo-contain">
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-black font-orbitron">EXTENSIÓN MARACAY</p>
+                                    <p class="text-gray-400">Estado Aragua, Venezuela</p>
+                                    <p class="text-primary font-bold mt-1 font-orbitron">50+ KM DE COBERTURA</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ SECTION -->
+    <section class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 bg-darker"></div>
+        <div class="absolute top-20 left-10 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px]"></div>
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid lg:grid-cols-5 gap-16 items-start">
+                <div class="lg:col-span-2 reveal-left">
+                    <div class="bg-card rounded-3xl overflow-hidden border border-white/5 mb-8">
+                        <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=250&fit=crop" alt="FAQ" class="w-full h-48 object-cover">
+                        <div class="p-6 text-center">
+                            <div class="relative w-24 h-24 mx-auto mb-4">
+                                <img src="assets/logo.png" alt="Peaje Shock" class="logo-contain">
+                            </div>
+                            <h2 class="text-3xl font-black font-orbitron">FAQ</h2>
+                            <p class="text-gray-400 text-sm mt-2">Preguntas frecuentes</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-3 space-y-4 stagger-children" id="faqGrid">
+                    <div class="faq-item card-cinematic bg-card rounded-2xl border border-white/5 overflow-hidden hover:border-primary/20 transition-all duration-500">
+                        <div class="flex items-center gap-4 p-6 pb-0">
+                            <div class="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=80&h=80&fit=crop" alt="" class="logo-cover">
+                            </div>
+                            <button class="faq-btn w-full text-left flex items-center justify-between">
+                                <span class="font-bold font-orbitron text-sm">¿CÓMO FUNCIONA EL COBRO AUTOMÁTICO?</span>
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-primary faq-icon transition-transform duration-300 flex-shrink-0"></i>
+                            </button>
+                        </div>
+                        <div class="faq-content hidden px-6 pb-6 pt-2">
+                            <p class="text-gray-400 leading-relaxed text-sm">El sensor ultrasónico detecta la presencia del vehículo, la cámara captura la placa, Arduino procesa la información y el sistema cobra automáticamente antes de abrir la barrera. Todo el proceso toma menos de 0.5 segundos.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item card-cinematic bg-card rounded-2xl border border-white/5 overflow-hidden hover:border-primary/20 transition-all duration-500">
+                        <div class="flex items-center gap-4 p-6 pb-0">
+                            <div class="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=80&h=80&fit=crop" alt="" class="logo-cover">
+                            </div>
+                            <button class="faq-btn w-full text-left flex items-center justify-between">
+                                <span class="font-bold font-orbitron text-sm">¿QUÉ VEHÍCULOS SON COMPATIBLES?</span>
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-primary faq-icon transition-transform duration-300 flex-shrink-0"></i>
+                            </button>
+                        </div>
+                        <div class="faq-content hidden px-6 pb-6 pt-2">
+                            <p class="text-gray-400 leading-relaxed text-sm">El sistema está diseñado para todo tipo de vehículos: automóviles, camionetas, autobuses y vehículos de carga. Los sensores se ajustan automáticamente según el tamaño del vehículo detectado.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item card-cinematic bg-card rounded-2xl border border-white/5 overflow-hidden hover:border-primary/20 transition-all duration-500">
+                        <div class="flex items-center gap-4 p-6 pb-0">
+                            <div class="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=80&h=80&fit=crop" alt="" class="logo-cover">
+                            </div>
+                            <button class="faq-btn w-full text-left flex items-center justify-between">
+                                <span class="font-bold font-orbitron text-sm">¿CUÁNTO TIEMPO TARDA LA INSTALACIÓN?</span>
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-primary faq-icon transition-transform duration-300 flex-shrink-0"></i>
+                            </button>
+                        </div>
+                        <div class="faq-content hidden px-6 pb-6 pt-2">
+                            <p class="text-gray-400 leading-relaxed text-sm">La instalación completa de una estación de peaje toma entre 2 y 3 días, incluyendo montaje mecánico, integración electrónica y pruebas de funcionamiento.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item card-cinematic bg-card rounded-2xl border border-white/5 overflow-hidden hover:border-primary/20 transition-all duration-500">
+                        <div class="flex items-center gap-4 p-6 pb-0">
+                            <div class="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=80&h=80&fit=crop" alt="" class="logo-cover">
+                            </div>
+                            <button class="faq-btn w-full text-left flex items-center justify-between">
+                                <span class="font-bold font-orbitron text-sm">¿QUÉ PASA SI HAY UN ERROR DEL SISTEMA?</span>
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-primary faq-icon transition-transform duration-300 flex-shrink-0"></i>
+                            </button>
+                        </div>
+                        <div class="faq-content hidden px-6 pb-6 pt-2">
+                            <p class="text-gray-400 leading-relaxed text-sm">El sistema tiene redundancia automática. Si un componente falla, la barrera se abre en modo manual y se activa una alerta al centro de control. El soporte técnico remoto está disponible 24/7.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item card-cinematic bg-card rounded-2xl border border-white/5 overflow-hidden hover:border-primary/20 transition-all duration-500">
+                        <div class="flex items-center gap-4 p-6 pb-0">
+                            <div class="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1563986768609-322da13575f2?w=80&h=80&fit=crop" alt="" class="logo-cover">
+                            </div>
+                            <button class="faq-btn w-full text-left flex items-center justify-between">
+                                <span class="font-bold font-orbitron text-sm">¿SE PUEDE INTEGRAR CON SISTEMAS EXISTENTES?</span>
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-primary faq-icon transition-transform duration-300 flex-shrink-0"></i>
+                            </button>
+                        </div>
+                        <div class="faq-content hidden px-6 pb-6 pt-2">
+                            <p class="text-gray-400 leading-relaxed text-sm">Sí, el sistema Peaje Shock es compatible con infraestructura de peaje existente. Puede integrarse con barreras actuales y sistemas de gestión de tráfico mediante protocolos estándar IoT.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section id="contacto" class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 bg-dark"></div>
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px]"></div>
+        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px]"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="relative mb-16 reveal overflow-hidden rounded-3xl">
+                <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&h=300&fit=crop" alt="Contacto" class="w-full h-48 object-cover">
+                <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/80 to-dark/60"></div>
+                <div class="absolute inset-0 flex items-center justify-center gap-8">
+                    <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-primary/50 glow-intense">
+                        <img src="assets/logo.png" alt="Logo" class="logo-contain">
+                    </div>
+                    <div>
+                        <span class="text-accent text-sm font-semibold tracking-[0.3em] uppercase font-orbitron block">Contacto</span>
+                        <h2 class="text-4xl lg:text-5xl font-black font-orbitron">¿LISTO PARA IMPLEMENTAR?</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="card-cinematic bg-card rounded-3xl p-10 border border-white/5 reveal-left">
+                    <form id="contactForm" class="space-y-6">
+                        <div class="grid sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold mb-3 font-orbitron tracking-wider">NOMBRE</label>
+                                <input type="text" class="w-full bg-dark border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-all duration-300" placeholder="Tu nombre">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-3 font-orbitron tracking-wider">CORREO</label>
+                                <input type="email" class="w-full bg-dark border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-all duration-300" placeholder="tu@email.com">
+                            </div>
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold mb-3 font-orbitron tracking-wider">TELÉFONO</label>
+                                <input type="tel" class="w-full bg-dark border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-all duration-300" placeholder="+58 412-000-0000">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-3 font-orbitron tracking-wider">TIPO</label>
+                                <select class="w-full bg-dark border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-primary transition-all duration-300">
+                                    <option>Peaje Básico</option>
+                                    <option>Peaje Completo</option>
+                                    <option>Personalizado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-3 font-orbitron tracking-wider">MENSAJE</label>
+                            <textarea rows="4" class="w-full bg-dark border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-all duration-300 resize-none" placeholder="Cuéntanos sobre tu proyecto..."></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-primary to-accent text-dark font-black py-5 rounded-2xl text-lg hover:opacity-90 transition-all duration-500 hover:shadow-[0_0_50px_rgba(0,229,255,0.4)] flex items-center justify-center gap-3 font-orbitron hover:scale-[1.02]">
+                            <i data-lucide="send" class="w-5 h-5"></i> ENVIAR MENSAJE
+                        </button>
+                    </form>
+                </div>
+
+                <div class="space-y-6 reveal-right">
+                    <div class="card-cinematic bg-card rounded-3xl overflow-hidden border border-white/5">
+                        <div class="h-32 overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=500&h=150&fit=crop" alt="Contacto" class="logo-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-card to-transparent"></div>
+                        </div>
+                        <div class="p-10">
+                            <h3 class="text-2xl font-bold mb-8 font-orbitron">INFORMACIÓN DE CONTACTO</h3>
+                            <div class="space-y-6">
+                            <div class="flex items-center gap-5">
+                                <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0"><i data-lucide="phone" class="w-7 h-7 text-primary"></i></div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Teléfono</p>
+                                    <p class="font-bold text-lg font-orbitron">+58 412-123-4567</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-5">
+                                <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center flex-shrink-0"><i data-lucide="mail" class="w-7 h-7 text-accent"></i></div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Correo</p>
+                                    <p class="font-bold text-lg font-orbitron">info@peajeshock.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-5">
+                                <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0"><i data-lucide="map-pin" class="w-7 h-7 text-primary"></i></div>
+                                <div>
+                                    <p class="text-gray-400 text-sm">Ubicación</p>
+                                    <p class="font-bold text-lg font-orbitron">MARACAY, ARAGUA</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-cinematic bg-gradient-to-br from-primary/10 via-card to-accent/10 rounded-3xl overflow-hidden border border-primary/20 relative">
+                        <div class="h-32 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=500&h=150&fit=crop" alt="Tecnología" class="logo-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-card to-transparent"></div>
+                        </div>
+                        <div class="p-10 relative">
+                            <div class="absolute inset-0 opacity-5"><img src="assets/logo.png" alt="" class="logo-contain p-8"></div>
+                            <h3 class="text-2xl font-bold mb-6 font-orbitron relative">¿POR QUÉ ELEGIRNOS?</h3>
+                            <ul class="space-y-4 relative">
+                            <li class="flex items-center gap-4"><div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0"><i data-lucide="check" class="w-4 h-4 text-accent"></i></div><span class="text-gray-300 text-sm">Tecnología Arduino open-source</span></li>
+                            <li class="flex items-center gap-4"><div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0"><i data-lucide="check" class="w-4 h-4 text-accent"></i></div><span class="text-gray-300 text-sm">Soporte técnico 24/7</span></li>
+                            <li class="flex items-center gap-4"><div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0"><i data-lucide="check" class="w-4 h-4 text-accent"></i></div><span class="text-gray-300 text-sm">Instalación y capacitación incluida</span></li>
+                            <li class="flex items-center gap-4"><div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0"><i data-lucide="check" class="w-4 h-4 text-accent"></i></div><span class="text-gray-300 text-sm">Garantía de 2 años</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-16 border-t border-white/5 relative overflow-hidden">
+        <div class="absolute inset-0 bg-darker"></div>
+        <div class="absolute inset-0 opacity-5"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&h=300&fit=crop" alt="" class="w-full h-full object-cover"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid md:grid-cols-3 gap-10 items-center">
+                <div>
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-full overflow-hidden border border-primary/20 flex-shrink-0"><img src="assets/logo.png" alt="Logo" class="logo-contain"></div>
+                        <span class="text-xl font-black font-orbitron">PEAJE<span class="text-primary">SHOCK</span></span>
+                    </div>
+                    <p class="text-gray-500 text-sm">Sistema de Peaje Automático - Extensión Maracay 2026</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-gray-500 text-sm">&copy; 2026 Peaje Shock. Todos los derechos reservados.</p>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <a href="#" class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-primary/10 transition-all duration-500 hover:scale-110 hover:glow-cyan"><i data-lucide="twitter" class="w-5 h-5 text-gray-400"></i></a>
+                    <a href="#" class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-primary/10 transition-all duration-500 hover:scale-110 hover:glow-cyan"><i data-lucide="instagram" class="w-5 h-5 text-gray-400"></i></a>
+                    <a href="#" class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-primary/10 transition-all duration-500 hover:scale-110 hover:glow-cyan"><i data-lucide="linkedin" class="w-5 h-5 text-gray-400"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <button id="backToTop" class="fixed bottom-8 right-8 w-14 h-14 rounded-2xl bg-gradient-to-r from-primary to-accent text-dark flex items-center justify-center shadow-lg hover:opacity-90 transition-all duration-500 z-50 hidden hover:scale-110 hover:glow-intense">
+        <i data-lucide="arrow-up" class="w-6 h-6"></i>
+    </button>
+
+    <script>
+        lucide.createIcons();
+
+        const loaderBar = document.getElementById('loader-bar');
+        const preloader = document.getElementById('preloader');
+        let progress = 0;
+        const loaderInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(loaderInterval);
+                setTimeout(() => {
+                    preloader.style.opacity = '0';
+                    setTimeout(() => {
+                        preloader.style.display = 'none';
+                        document.getElementById('heroText').classList.add('active');
+                        document.getElementById('heroLogo').classList.add('active');
+                    }, 700);
+                }, 300);
+            }
+            loaderBar.style.width = progress + '%';
+        }, 100);
+
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.opacity = Math.random() * 0.5 + 0.1;
+                particle.style.width = (Math.random() * 3 + 1) + 'px';
+                particle.style.height = particle.style.width;
+                const colors = ['#00E5FF', '#00FF88', '#00E5FF'];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.animate([
+                    { transform: 'translateY(0) translateX(0)', opacity: 0 },
+                    { opacity: 0.5 },
+                    { transform: `translateY(-${Math.random() * 200 + 100}px) translateX(${Math.random() * 100 - 50}px)`, opacity: 0 }
+                ], { duration: Math.random() * 10000 + 10000, iterations: Infinity, delay: Math.random() * 5000 });
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+        mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => mobileMenu.classList.add('hidden')));
+
+        document.querySelectorAll('.faq-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const content = btn.nextElementSibling;
+                const icon = btn.querySelector('.faq-icon');
+                document.querySelectorAll('.faq-content').forEach(c => { if (c !== content) c.classList.add('hidden'); });
+                document.querySelectorAll('.faq-icon').forEach(i => { if (i !== icon) i.style.transform = 'rotate(0deg)'; });
+                content.classList.toggle('hidden');
+                icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
+        });
+
+        const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .stagger-children');
+        const revealOnScroll = () => {
+            revealElements.forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight * 0.85) el.classList.add('active');
+            });
+        };
+        window.addEventListener('scroll', revealOnScroll);
+        window.addEventListener('load', revealOnScroll);
+
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('bg-dark/95', window.scrollY > 100);
+            navbar.classList.toggle('backdrop-blur-xl', window.scrollY > 100);
+        });
+
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => backToTop.classList.toggle('hidden', window.scrollY <= 500));
+        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        document.getElementById('contactForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i> ¡ENVIADO!';
+            setTimeout(() => { btn.innerHTML = '<i data-lucide="send" class="w-5 h-5"></i> ENVIAR MENSAJE'; e.target.reset(); lucide.createIcons(); }, 3000);
+        });
+    </script>
+</body>
+</html>
